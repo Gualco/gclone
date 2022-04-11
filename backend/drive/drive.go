@@ -753,6 +753,12 @@ func (f *Fs) shouldRetry(ctx context.Context, err error) (bool, error) {
 		if len(gerr.Errors) > 0 {
 			reason := gerr.Errors[0].Reason
 			if reason == "rateLimitExceeded" || reason == "userRateLimitExceeded" {
+				
+				if f.opt.StopOnUploadLimit && gerr.Errors[0].Message == "User rate limit exceeded." {
+					fs.Errorf(f, "Received upload limit error: %v", err)
+					return false, fserrors.FatalError(err)
+				}
+
 				// 如果存在 ServiceAccountFilePath,调用 changeSvc, 重试
 				if f.opt.ServiceAccountFilePath != "" {
 					f.waitChangeSvc.Lock()
@@ -760,10 +766,7 @@ func (f *Fs) shouldRetry(ctx context.Context, err error) (bool, error) {
 					f.waitChangeSvc.Unlock()
 					return true, err
 				}
-				if f.opt.StopOnUploadLimit && gerr.Errors[0].Message == "User rate limit exceeded." {
-					fs.Errorf(f, "Received upload limit error: %v", err)
-					return false, fserrors.FatalError(err)
-				}
+
 				return true, err
 			} else if f.opt.StopOnDownloadLimit && reason == "downloadQuotaExceeded" {
 				fs.Errorf(f, "Received download limit error: %v", err)
@@ -779,6 +782,7 @@ func (f *Fs) shouldRetry(ctx context.Context, err error) (bool, error) {
 
 // patch 1: 替换 service file
 func (f *Fs) changeSvc(ctx context.Context) {
+	time.Sleep(1500 * time.Millisecond)
 	opt := &f.opt
 	sfp := f.ServiceAccountFiles
 	oldFile := opt.ServiceAccountFile
@@ -812,6 +816,7 @@ func (f *Fs) changeSvc(ctx context.Context) {
 
 // rolling sa account
 func (f *Fs) rollingSvc(ctx context.Context) {
+	time.Sleep(1500 * time.Millisecond)
 	opt := &f.opt
 	sfp := f.ServiceAccountFiles
 	if sfp.isPoolEmpty() {
