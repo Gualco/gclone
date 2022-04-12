@@ -651,6 +651,7 @@ type Options struct {
 	RollingSA              bool   `config:"rolling_sa"`
 	RollingCount           int    `config:"rolling_count"`
 	RandomPickSA           bool   `config:"random_pick_sa"`
+	StopOnRateLimit        bool   `config:"stop_on_rate_limit"`
 }
 
 // Fs represents a remote drive server
@@ -754,7 +755,7 @@ func (f *Fs) shouldRetry(ctx context.Context, err error) (bool, error) {
 			reason := gerr.Errors[0].Reason
 			if reason == "rateLimitExceeded" || reason == "userRateLimitExceeded" {
 				
-				if f.opt.StopOnUploadLimit && gerr.Errors[0].Message == "User rate limit exceeded." {
+				if (f.opt.StopOnRateLimit) && gerr.Errors[0].Message == "User rate limit exceeded." {
 					// fs.Errorf(f, "Received upload limit error: %v", err)
 					fs.Errorf(f, "[%s]:[%s]: Received upload limit error: %v", f.opt.ServiceAccountFile,f.name, err)
 					return false, fserrors.FatalError(err)
