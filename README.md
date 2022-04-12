@@ -1,4 +1,5 @@
-  
+[![build](https://github.com/Gualco/gclone/actions/workflows/build.yml/badge.svg)](https://github.com/Gualco/gclone/actions/workflows/build.yml)
+
 # gclone
 
 A modified version of the [rclone](//github.com/rclone/rclone)
